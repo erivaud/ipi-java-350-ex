@@ -9,28 +9,22 @@ import com.ipiecoles.java.java350.repository.EmployeRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.persistence.EntityExistsException;
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-// outils pour couverture des test : Coverage
-// PiTest : il opère des mutations : il remplace les + par les -, les * en / etc... très vicieux
-// dans Run > edit config > Maven : Command line: écrire : clean install org.pitest:pitest-maven:mutationCoverage
-
 @ExtendWith(MockitoExtension.class)
 class EmployeServiceTest {
 
     @InjectMocks
     private EmployeService employeService;
-    // on injecte le service en utilisant le mock ci-dessous
 
     @Mock
     private EmployeRepository employeRepository;
-    // on veut simuler un employeRepository
 
     @Test
     void testEmbaucheEmployeTechnicienPleinTempsBts() throws EmployeException {
@@ -42,18 +36,14 @@ class EmployeServiceTest {
         NiveauEtude niveauEtudes = NiveauEtude.BTS_IUT;
         Double tempsPartiel = 1.0;
 
-        // on veut qu'à l'appel de la fonction findLastMatricule, le résultat soit null
         Mockito.when(employeRepository.findLastMatricule()).thenReturn(null);
         Mockito.when(employeRepository.findByMatricule("T00001")).thenReturn(null);
         Mockito.when(employeRepository.save(Mockito.any())).thenAnswer(AdditionalAnswers.returnsFirstArg());
 
         //When
-
         Employe e = employeService.embaucheEmploye(nom, prenom, poste, niveauEtudes, tempsPartiel);
 
         // Then
-        // si employe existe dans la base avec les bonnes infos
-
         Assertions.assertEquals("T00001", e.getMatricule());
         Assertions.assertEquals(nom, e.getNom());
         Assertions.assertEquals(prenom, e.getPrenom());
@@ -64,7 +54,6 @@ class EmployeServiceTest {
         Assertions.assertEquals(tempsPartiel, e.getTempsPartiel());
     }
 
-    // si on voulait tester plus de scenarios on aurait pu faire un test mock + paramétrable
     @Test
     public void testEmbaucheManagerMiTempsLastMatricule00345() throws EmployeException {
 
@@ -75,9 +64,7 @@ class EmployeServiceTest {
         NiveauEtude niveauEtudes = NiveauEtude.MASTER;
         Double tempsPartiel = 0.5;
 
-        // on veut qu'à l'appel de la fonction findLastMatricule, le résultat soit 00345
         Mockito.when(employeRepository.findLastMatricule()).thenReturn("00345");
-        // on veut qu'à l'appel de la fonction findByMatricule, le résultat soit null
         Mockito.when(employeRepository.findByMatricule("M00346")).thenReturn(null);
         Mockito.when(employeRepository.save(Mockito.any())).thenAnswer(AdditionalAnswers.returnsFirstArg());
 
@@ -86,7 +73,6 @@ class EmployeServiceTest {
 
         //Then
 
-        // si employe existe dans la base avec les bonnes infos
         Assertions.assertEquals("M00346", e.getMatricule());
         Assertions.assertEquals(nom, e.getNom());
         Assertions.assertEquals(prenom, e.getPrenom());
@@ -100,8 +86,6 @@ class EmployeServiceTest {
 
     }
 
-    // pour tester la levée d'exception on peut faire ça :
-    // ou sinon voir les slides pour la version Junit5 avec une notation avec des lambdas
     @Test
     public void testEmbaucheManagerMiTempsLastMatricule99999() {
 
@@ -112,7 +96,6 @@ class EmployeServiceTest {
         NiveauEtude niveauEtudes = NiveauEtude.MASTER;
         Double tempsPartiel = 0.5;
 
-        // on veut qu'à l'appel de la fonction findLastMatricule, le résultat soit :
         Mockito.when(employeRepository.findLastMatricule()).thenReturn("99999");
 
         // When
@@ -126,7 +109,6 @@ class EmployeServiceTest {
 
     }
 
-    // on va tester l'autre levée d'exception :
     @Test
     public void testEmbaucheManagerMiTempsLastMatriculeExisteDeja() throws EmployeException {
 
@@ -137,11 +119,8 @@ class EmployeServiceTest {
         NiveauEtude niveauEtudes = NiveauEtude.MASTER;
         Double tempsPartiel = 0.5;
 
-        // on veut qu'à l'appel de la fonction findLastMatricule, le résultat soit null
         Mockito.when(employeRepository.findLastMatricule()).thenReturn(null);
-        // on veut qu'à l'appel de la fonction findByMatricule, le résultat soit null
         Mockito.when(employeRepository.findByMatricule("M00001")).thenReturn(new Employe());
-        // Mockito.when(employeRepository.save(Mockito.any())).thenAnswer(AdditionalAnswers.returnsFirstArg());
 
         // When
         try {
@@ -152,21 +131,10 @@ class EmployeServiceTest {
             Assertions.assertEquals("L'employé de matricule M00001 existe déjà en BDD",
                     e1.getMessage());
         }
-
     }
 
-    //quand une méthode ne retourne rien, on utilise les argument captors pour récupérer les résultats
-    // voir slide Mock 2 :
-    // on crée le captor :
-    // ArgumentCaptor<Vehicule> vehiculeCaptor = ArgumentCaptor.forClass(Vehicule.class);
-    // et là on vérifie que l'appel à la fonction est fait une fois :
-   // Mockito.verify(vehiculeRepository, Mockito.times(1)).save(vehiculeCaptor.capture());
-    // on peut récupérer aussi une liste en retour d'une méthode ou l'absence d'appel à une méthode
 
-    // : on définit un Argument Captor et ensuite on capture le résultat d'une méthode qui return void avec
-    // vehiculeCaptor.getValue()
-
-
+    @Test
     public void testEmbaucheEmployeTechnicienPleinTempsBtsArgumentCaptor() throws EmployeException {
         //Given
         String nom = "Doe";
@@ -175,7 +143,6 @@ class EmployeServiceTest {
         NiveauEtude niveauEtudes = NiveauEtude.BTS_IUT;
         Double tempsPartiel = 1.0;
 
-        // on veut qu'à l'appel de la fonction findLastMatricule, le résultat soit null
         Mockito.when(employeRepository.findLastMatricule()).thenReturn(null);
         Mockito.when(employeRepository.findByMatricule("T00001")).thenReturn(null);
         Mockito.when(employeRepository.save(Mockito.any())).thenAnswer(AdditionalAnswers.returnsFirstArg());
@@ -184,8 +151,6 @@ class EmployeServiceTest {
         employeService.embaucheEmploye(nom, prenom, poste, niveauEtudes, tempsPartiel);
         // Then
         ArgumentCaptor<Employe> employeCaptor = ArgumentCaptor.forClass(Employe.class);
-        // par défaut le test se fait pour ces valeurs : , Mockito.times(1)
-        // donc cette partie est facultative
         Mockito.verify(employeRepository, Mockito.times(1)).save(employeCaptor.capture());
 
         Assertions.assertEquals("T00001", employeCaptor.getValue().getMatricule());
@@ -193,15 +158,244 @@ class EmployeServiceTest {
         Assertions.assertEquals(prenom, employeCaptor.getValue().getPrenom());
         Assertions.assertEquals(LocalDate.now(), employeCaptor.getValue().getDateEmbauche());
         Assertions.assertEquals(Entreprise.PERFORMANCE_BASE, employeCaptor.getValue().getPerformance());
-        Assertions.assertEquals(1064.85, (double)employeCaptor.getValue().getSalaire());
+        Assertions.assertEquals(1825.46, (double)employeCaptor.getValue().getSalaire());
         Assertions.assertEquals(tempsPartiel, employeCaptor.getValue().getTempsPartiel());
-
-        // ou :
-
-        // Employe e = employeCaptor.capture().getValue();
-        // Assertions.assertEquals("T00001", e.getMatricule());
-        // etc
 
     }
 
+    @Test
+    public void testEmbauchEmployeTempsPartielNull() throws EmployeException {
+        //Given
+        String nom = "Doe";
+        String prenom = "John";
+        Poste poste = Poste.TECHNICIEN;
+        NiveauEtude niveauEtudes = NiveauEtude.BTS_IUT;
+        Double tempsPartiel = null;
+
+        Mockito.when(employeRepository.findLastMatricule()).thenReturn(null);
+        Mockito.when(employeRepository.findByMatricule("T00001")).thenReturn(null);
+
+        // When
+        try {
+            employeService.embaucheEmploye(nom, prenom, poste, niveauEtudes, tempsPartiel) ;
+            Assertions.fail("Devrait lancer une exception");
+            // Then
+        } catch (NullPointerException e1) {
+            Assertions.assertEquals("Le temps partiel ne peut être null",
+                    e1.getMessage());
+        }
+    }
+
+    @ParameterizedTest(name = "employé matricule {0} : perf initiale {1}, CA traité {2}, objectif CA : {3}, perf attendue : {4}")
+    @CsvSource( {
+            "'C12345', 1, 60000, 60000, 1",
+            "'C12345', 0, 60000, 60000, 1",
+            "'C12345', 0, 59500, 60000, 1",
+            "'C12345', 5, 63000, 60000, 5",
+            "'C12345', 2, 44000, 60000, 1",
+            "'C12345', 2, 48000, 60000, 1",
+            "'C12345', 6, 48000, 60000, 4",
+            "'C12345', 2, 48000, 60000, 1",
+            "'C12345', 2, 66000, 60000, 3",
+            "'C12345', 2, 72000, 60000, 3",
+            "'C12345', 2, 75000, 60000, 6",
+            "'C12345', 11, 60000, 60000, 12",
+            "'C12345', 6, 75000, 60000, 10",
+            "'C12345', 7, 75000, 60000, 12"
+    })
+    public void testCalculPerformanceCommercialNominal(String matricule, Integer performanceInitiale, Long caTraite, Long objectifCA, Integer performance) throws EmployeException {
+        // Given
+        Mockito.when(employeRepository.findByMatricule(matricule))
+                .thenReturn(new Employe(
+                        "Doe",
+                        "John",
+                        matricule,
+                        LocalDate.now(),
+                        Entreprise.SALAIRE_BASE,
+                        performanceInitiale,
+                        1.0));
+        Mockito.when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(10.0);
+
+        // When
+        employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+
+        // Then
+        ArgumentCaptor<Employe> employeCaptor = ArgumentCaptor.forClass(Employe.class);
+        Mockito.verify(employeRepository).save(employeCaptor.capture());
+        Assertions.assertEquals(performance, employeCaptor.getValue().getPerformance());
+    }
+
+    @Test
+    public void addBonusPerformanceCommercialPerfNull() {
+        // Given
+        Integer performance = null;
+
+        // When
+        try {
+            employeService.addBonusPerformanceCommercial(performance);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("La performance ne peut être = null pour appliquer un bonus !",
+                    e1.getMessage());
+        }
+    }
+
+    @Test
+    public void addBonusPerformanceCommercialInferieurMoyenne() throws EmployeException {
+        //Given
+        Integer performance = 1;
+        Mockito.when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(10.0);
+        //When
+        Integer performanceAvecBonus = employeService.addBonusPerformanceCommercial(performance);
+        //Then
+        Assertions.assertEquals(1, (int)performanceAvecBonus);
+    }
+
+    @Test
+    public void addBonusPerformanceCommercialSuppMoyenne() throws EmployeException {
+        //Given
+        Integer performance = 2;
+        Mockito.when(employeRepository.avgPerformanceWhereMatriculeStartsWith("C")).thenReturn(1.0);
+        //When
+        Integer performanceAvecBonus = employeService.addBonusPerformanceCommercial(performance);
+        //Then
+        Assertions.assertEquals(3, (int)performanceAvecBonus);
+    }
+
+
+
+    @Test
+    public void testCalculPerformanceCommercialCaTraiteNull() {
+        // Given
+        String matricule = "C12345";
+        Long caTraite = null;
+        Long objectifCA = new Long(60000);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("Le chiffre d'affaire traité ne peut être négatif ou null !",
+                    e1.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialCaTraiteNegatif() {
+        // Given
+        String matricule = "C12345";
+        Long caTraite = new Long(-2000);
+        Long objectifCA = new Long(60000);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("Le chiffre d'affaire traité ne peut être négatif ou null !",
+                    e1.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialObjectifCANull() {
+        // Given
+        String matricule = "C12345";
+        Long caTraite = new Long(60000);
+        Long objectifCA = null;
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("L'objectif de chiffre d'affaire ne peut être négatif ou null !",
+                    e1.getMessage());
+        }
+
+    }
+    @Test
+    public void testCalculPerformanceCommercialObjectifCANegatif() {
+        // Given
+        String matricule = "C12345";
+        Long caTraite = new Long(60000);
+        Long objectifCA = new Long(-60000);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("L'objectif de chiffre d'affaire ne peut être négatif ou null !",
+                    e1.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialMatriculeNull() {
+        // Given
+        String matricule = null;
+        Long caTraite = new Long(60000);
+        Long objectifCA = new Long(60000);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("Le matricule ne peut être null et doit commencer par un C !",
+                    e1.getMessage());
+        }
+
+    }
+    @Test
+    public void testCalculPerformanceCommercialMatriculeTechnicien() {
+        // Given
+        String matricule = "T12345";
+        Long caTraite = new Long(60000);
+        Long objectifCA = new Long(60000);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("Le matricule ne peut être null et doit commencer par un C !",
+                    e1.getMessage());
+        }
+
+    }
+
+    @Test
+    public void testCalculPerformanceCommercialPasEnBase() {
+        // Given
+        String matricule = "C12345";
+        Long caTraite = new Long(60000);
+        Long objectifCA = new Long(60000);
+        Mockito.when(employeRepository.findByMatricule(matricule))
+                .thenReturn(null);
+
+        // When
+        try {
+            employeService.calculPerformanceCommercial(matricule, caTraite, objectifCA);
+            Assertions.fail("Devrait lancer une exception");
+        } catch (EmployeException e1) {
+            // Then
+            Assertions.assertEquals("Le matricule " + matricule + " n'existe pas !",
+                    e1.getMessage());
+        }
+    }
+
 }
+
